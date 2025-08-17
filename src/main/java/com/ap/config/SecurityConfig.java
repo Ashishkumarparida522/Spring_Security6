@@ -3,15 +3,19 @@ package com.ap.config;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.AuthenticationProvider;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
 import org.springframework.security.config.Customizer;
+import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.NoOpPasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 
 import com.ap.service.MyUserDetailsService;
 
@@ -22,9 +26,11 @@ public class SecurityConfig {
 	
 
 	private  final UserDetailsService userdetailservice;
-	public SecurityConfig(UserDetailsService userdetailservice)
+	private final JwtAuthenticationFilter jwtAuthenticationFilter;
+	public SecurityConfig(UserDetailsService userdetailservice,JwtAuthenticationFilter jwtAuthenticationFilter)
 	{
 		this.userdetailservice=userdetailservice;
+		this.jwtAuthenticationFilter=jwtAuthenticationFilter;
 	}
 	
 	
@@ -37,7 +43,12 @@ public class SecurityConfig {
 			.authorizeHttpRequests(req->req.requestMatchers("reg","login").permitAll().
 					anyRequest().authenticated())
 			
-			.httpBasic(Customizer.withDefaults());//basic authentication
+			.httpBasic(Customizer.withDefaults()).
+			addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
+			
+			
+			
+			//basic authentication
 		return seq.build();
 	}
 	
@@ -54,6 +65,13 @@ public class SecurityConfig {
 		provider.setUserDetailsService(userdetailservice);
 		provider.setPasswordEncoder(bCryptPasswordEncoder());
 		return provider;
+	}
+	
+	@Bean
+	public AuthenticationManager authenticationManager(AuthenticationConfiguration configuration)throws Exception
+	{
+		
+		return configuration.getAuthenticationManager();
 	}
 
 }

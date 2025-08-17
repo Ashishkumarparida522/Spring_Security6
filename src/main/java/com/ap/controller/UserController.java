@@ -32,11 +32,8 @@ public class UserController {
 	@PostMapping("/login")
 	public String login(@RequestBody User user)
 	{
-		var u = repo.findByUserName(user.getUserName());
-		if(!Objects.isNull(u))
-		return "success";
-		else
-			return "failure";
+//		
+		return service.verifyUser(user);
 	}
 
 }
